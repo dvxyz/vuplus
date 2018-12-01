@@ -1,49 +1,79 @@
 #!/bin/bash
 
+function test()
+{
+ echo $@
+}
+
 function restart_oscam()
 {
  killall oscam-unstable
+ rm -rf /tmp/*.info* /tmp/*.tmp* /tmp/.oscam/reader*
  /usr/bin/oscam-unstable -b -r 1 -c /etc/tuxbox/config
 }
 
-function update_oscam()
-{	
- oscam_file=$1
- oscam_srvr=$2
- oscam_port=$3
- oscam_user=$4
- oscam_pass=$5
+function reload_readers()
+{
+ wget http://192.168.0.10:83/readers.html?action=reloadreaders -O /tmp/reload_readers.html
+}
 
- sed -i "s/\(label *= *\).*/\1$oscam_srvr/" $oscam_file;
- sed -i "s/\(device *= *\).*/\1$oscam_srvr,$oscam_port/" $oscam_file;
- sed -i "s/\(user *= *\).*/\1$oscam_user/" $oscam_file;
- sed -i "s/\(password *= *\).*/\1$oscam_pass/" $oscam_file;
+function update_oscam()
+{
+ oscam_srvr=$1
+ oscam_port=$2
+ oscam_user=$3
+ oscam_pass=$4
+
+ echo $@ | tee -a /tmp/update_oscam.log
+ echo Server: $oscam_srvr | tee -a /tmp/update_oscam.log
+ echo Port:   $oscam_port | tee -a /tmp/update_oscam.log
+ echo User:   $oscam_user | tee -a /tmp/update_oscam.log
+ echo Pass:   $oscam_pass | tee -a /tmp/update_oscam.log
+
+ oscam_file="/etc/tuxbox/config/oscam.$(echo $oscam_srvr | tr '.-' '_').server"
+
+ if [[ ! -f "$oscam_file" ]] ; then
+  cp /etc/tuxbox/config/template.oscam.server "$oscam_file"
+ fi
+
+ sed -i "s/\(label *= *\).*/\1$oscam_srvr/" $oscam_file
+ sed -i "s/\(device *= *\).*/\1$oscam_srvr,$oscam_port/" $oscam_file
+ sed -i "s/\(user *= *\).*/\1$oscam_user/" $oscam_file
+ sed -i "s/\(password *= *\).*/\1$oscam_pass/" $oscam_file
 }
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$(basename $0)] $@" >> /tmp/update_oscam.log
 
 if [[ "$1" == "restart" ]] ; then
- restart_oscam
-else 
- if [[ $# -eq 4 ]]; then
-  oscam_file="/etc/tuxbox/config/oscam.01_spdns_eu.server"
-  update_oscam "$oscam_file" "$1" "$2" "$3" "$4"
+ # restart_oscam
+ reload_readers
+ exit
+elif [[ $# -eq 4 ]]; then
+  update_oscam "$1" "$2" "$3" "$4"
+else
+ urls=( 'https://cccam.ch/free/get.php', 'http://boss-cccam.com/Test.php' )
+ # urls=( 'https://cccam.ch/free/get.php' )
+
+ if [[ $# -gt 0 ]]; then
+  urls=( "$1" )
  fi
 
- oscam_file="/etc/tuxbox/config/oscam.02_boss_cccam.server"
- 
- # IFS=', ' read -r -a array <<< $(wget http://boss-cccam.com/Test.php -O - | egrep -m 1 "strong" | sed -E 's/         <p class="text-center">Your Free Test line : <strong>c: //' | sed -E 's/<\/strong><\/p>//')
- # read -r -a array <<< $(wget https://www.velezschrod.xyz/Test.php -O - | egrep -i -m1 "C: " | sed -E 's/         <p class="text-center">Your Free Test line : <strong>c: //' | sed -E 's/<\/strong><\/p>//')
- read -r -a array <<< $(wget http://boss-cccam.com/Test.php -O - | egrep -i -m1 "C: " | sed -E 's/         <p class="text-center">Your Free Test line : <strong>c: //' | sed -E 's/<\/strong><\/p>//')
- 
- oscam_srvr="${array[0]}"
- oscam_port="${array[1]}"
- oscam_user="${array[2]}"
- oscam_pass="${array[3]}"
+ for url in "${urls[@]}" ; do 
+  read -r -a array <<< $(wget $url -O - | egrep -i -m1 "C: " | sed -E 's/<\/h1>//' | sed -E 's/          <h1>C: //' | sed -E 's/         <p class="text-center">Your Free Test line : <strong>c: //' | sed -E 's/<\/strong><\/p>//')
 
- update_oscam "$oscam_file" "$oscam_srvr" "$oscam_port" "$oscam_user" "$oscam_pass"
+  oscam_srvr="${array[0]}"
+  oscam_port="${array[1]}"
+  oscam_user="${array[2]}"
+  oscam_pass="${array[3]}"
 
- cat /etc/tuxbox/config/oscam.*.server > /etc/tuxbox/config/oscam.server
- restart_oscam
+  if [[ "$oscam_srvr" != "" ]] ; then
+   update_oscam "$oscam_srvr" "$oscam_port" "$oscam_user" "$oscam_pass"
+  fi
+ done ;
+fi
 
-fi 
+cat /etc/tuxbox/config/oscam.*.server > /home/vuuno/tuxbox/config/oscam.server
+# restart_oscam
+reload_readers
+
+
