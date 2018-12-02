@@ -4,7 +4,6 @@ echo $(whoami) > /tmp/whoami.$$.log
 
 while read mail; do
 
- # IFS=', ' read -r -a array <<< $(echo $mail | egrep -i -m1 "C: " | rev)
  read -r -a array <<< $(echo $mail | egrep -i -m1 "C: " | rev)
 
  oscam_srvr="${array[3]}"
