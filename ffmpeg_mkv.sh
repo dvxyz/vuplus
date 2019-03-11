@@ -6,29 +6,41 @@ VCODEC=copy
 OFFSET=00:05:00
 MV="mv"
 RM="rm"
-RECDIR=$(dirname "${1:-/mnt/usb/.}")
-RECFILE=$(basename "${1:-*.*}" .ts)
-ARCHIVED="$RECDIR/ts"
-SCRAMBLE="$RECDIR/scrambled"
+RECDIR=/mnt/usb
+RECFILE=${1:-*.ts}
 MKVDIR=/mnt/passport/vuuno4k
 
-echo "$RECDIR"
-echo "$ARCHIVED"
-echo "$SCRAMBLE"
+function test() {
+	TSFILE="$1";
+	echo "Files: $TSFILE";
+}
 
-mkdir -p "$ARCHIVED"
-mkdir -p "$SCRAMBLE"
+function ffmpeg_mkv() {
+ TSFILE="$1";
+ TSDIR=$(dirname "$TSFILE")
+ ARCHIVED="$TSDIR/ts"
+ SCRAMBLE="$TSDIR/scrambled"
+ METADATA=$(basename "$TSFILE" .ts);
+ MKVFILE=$(basename "$TSFILE" .ts).mkv
 
-for f in "$RECDIR/$RECFILE" ; do
- METADATA=$(basename "$f" .ts);
- MKVFILE="$METADATA.mkv";
- $FFMPEG -ss $OFFSET -y -i "$f" -map 0:v -map 0:a -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
- if [[ $? -eq 0 ]] ; then 
-  $MV "$RECDIR/./$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$ARCHIVED/"
+ $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
+ if [[ $? -eq 0 ]] ; then
+  mkdir -p "$ARCHIVED"
+  $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$ARCHIVED/"
  else
-  echo "$f : RC $?" ;
-  $MV "$RECDIR/./$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$SCRAMBLE/";
-  $RM "$MKVDIR/$MKVFILE";
- fi ;
-done
+  echo "$TSFILE : RC $?" ;
+  mkdir -p "$SCRAMBLE"
+  $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$SCRAMBLE/";
+  # $RM "$MKVDIR/$MKVFILE";
+ fi ;	
+}
 
+if [[ -d "$RECFILE" ]] ; then
+	for TSFILE in "$RECFILE/"*.ts ; do
+		ffmpeg_mkv "$TSFILE";
+	done
+elif [[ -f "$RECFILE" ]] ; then
+	ffmpeg_mkv "$RECFILE";
+elif [[ -f "$RECDIR/$RECFILE" ]] ; then
+	ffmpeg_mkv "$RECDIR/$RECFILE";
+fi
