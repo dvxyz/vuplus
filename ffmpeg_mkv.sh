@@ -16,22 +16,22 @@ function test() {
 }
 
 function ffmpeg_mkv() {
- TSFILE="$1";
+ TSFILE="$1"
  TSDIR=$(dirname "$TSFILE")
  ARCHIVED="$TSDIR/ts"
  SCRAMBLE="$TSDIR/scrambled"
- METADATA=$(basename "$TSFILE" .ts);
- MKVFILE=$(basename "$TSFILE" .ts).mkv
+ METADATA=$(basename "$TSFILE" .ts)
+ MKVFILE=$(basename "$TSFILE" .ts).mp4
 
  $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
  if [[ $? -eq 0 ]] ; then
-  mkdir -p "$ARCHIVED"
+  mkdir -p "$ARCHIVED" ;
   $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$ARCHIVED/"
  else
   echo "$TSFILE : RC $?" ;
   mkdir -p "$SCRAMBLE"
   $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$SCRAMBLE/";
-  # $RM "$MKVDIR/$MKVFILE";
+  $RM "$MKVDIR/$MKVFILE";
  fi ;	
 }
 
