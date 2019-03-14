@@ -7,6 +7,7 @@ OFFSET=00:05:00
 MV="mv"
 RM="rm"
 RECDIR=/mnt/usb
+DUPE=$RECDIR/_dupe_
 RECFILE=${1:-*.ts}
 MKVDIR=/mnt/passport/vuuno4k
 
@@ -21,18 +22,24 @@ function ffmpeg_mkv() {
  ARCHIVED="$TSDIR/ts"
  SCRAMBLE="$TSDIR/scrambled"
  METADATA=$(basename "$TSFILE" .ts)
- MKVFILE=$(basename "$TSFILE" .ts).mp4
+ MKVFILE=$(basename "$TSFILE" .ts)
+ MKVFILE="${MKVFILE:16}".mp4
 
- $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
- if [[ $? -eq 0 ]] ; then
-  mkdir -p "$ARCHIVED" ;
-  $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$ARCHIVED/"
+ if [[ -f "$MKVDIR/$MKVFILE" ]] ; then
+  mkdir -p $DUPE
+  $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$DUPE/"
  else
-  echo "$TSFILE : RC $?" ;
-  mkdir -p "$SCRAMBLE"
-  $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$SCRAMBLE/";
-  $RM "$MKVDIR/$MKVFILE";
- fi ;	
+  $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
+  if [[ $? -eq 0 ]] ; then
+   mkdir -p "$ARCHIVED" ;
+   $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$ARCHIVED/"
+  else
+   echo "$TSFILE : RC $?" ;
+   mkdir -p "$SCRAMBLE"
+   $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$SCRAMBLE/";
+   $RM "$MKVDIR/$MKVFILE";
+  fi ;
+ fi ;
 }
 
 if [[ -d "$RECFILE" ]] ; then
