@@ -32,7 +32,7 @@ function ffmpeg_mkv() {
   $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
   if [[ $? -eq 0 ]] ; then
    mkdir -p "$ARCHIVED" ;
-   $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$ARCHIVED/"
+   # $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$ARCHIVED/"
   else
    echo "$TSFILE : RC $?" ;
    mkdir -p "$SCRAMBLE"
