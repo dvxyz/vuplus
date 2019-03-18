@@ -52,8 +52,6 @@ elif [[ $# -eq 4 ]]; then
   update_oscam "$1" "$2" "$3" "$4"
 else
  urls=( 'https://cccam.ch/free/get.php', 'http://boss-cccam.com/Test.php' )
- # urls=( 'https://cccam.ch/free/get.php' )
- urls=( 'http://boss-cccam.com/Test.php' )
 
  if [[ $# -gt 0 ]]; then
   urls=( "$1" )

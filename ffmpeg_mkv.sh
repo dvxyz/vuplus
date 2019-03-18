@@ -9,6 +9,7 @@ RM="rm"
 RECDIR=/mnt/usb
 DUPE=$RECDIR/_dupe_
 RECFILE=${1:-*.ts}
+RECFILE="${RECDIR}/${1}"
 MKVDIR=/mnt/passport/vuuno4k
 
 function test() {
@@ -32,7 +33,8 @@ function ffmpeg_mkv() {
   $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
   if [[ $? -eq 0 ]] ; then
    mkdir -p "$ARCHIVED" ;
-   # $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$ARCHIVED/"
+   $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$ARCHIVED/"
+   for f in ts/"$METADATA"*.{eit,ap,cuts,meta,sc,ts} ; do ln -nsf "$f" "${f:19}" ; done
   else
    echo "$TSFILE : RC $?" ;
    mkdir -p "$SCRAMBLE"
@@ -43,11 +45,13 @@ function ffmpeg_mkv() {
 }
 
 if [[ -d "$RECFILE" ]] ; then
-	for TSFILE in "$RECFILE/"*.ts ; do
-		ffmpeg_mkv "$TSFILE";
-	done
+ exit ;
+ for TSFILE in "$RECFILE"/*.ts ; do
+  echo ffmpeg_mkv "$TSFILE" ;
+ done ;
 elif [[ -f "$RECFILE" ]] ; then
-	ffmpeg_mkv "$RECFILE";
-elif [[ -f "$RECDIR/$RECFILE" ]] ; then
-	ffmpeg_mkv "$RECDIR/$RECFILE";
+ ffmpeg_mkv "$RECFILE" ;
+else
+ echo "else" ;
 fi
+
