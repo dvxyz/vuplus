@@ -68,4 +68,7 @@ else
  echo "$(date) else ..." | tee -a $LOGFILE ;
 fi
 
+echo "find -L . -type l -exec rm {}" | tee -a $LOGFILE ;
+find -L . -type l -exec rm {} ;
+
 cd -
