@@ -24,7 +24,7 @@ function ffmpeg_mkv() {
  SCRAMBLE="$TSDIR/scrambled"
  METADATA=$(basename "$TSFILE" .ts)
  MKVFILE=$(basename "$TSFILE" .ts)
- MKVFILE="${MKVFILE:16}".mp4
+ MKVFILE="${MKVFILE:16}".mkv
 
  if [[ -f "$MKVDIR/$MKVFILE" ]] ; then
   mkdir -p $DUPE ;
@@ -32,7 +32,7 @@ function ffmpeg_mkv() {
   $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$DUPE/" ;
  else
   echo "$(date) [ffmp] ${FFMPEG} -ss ${OFFSET} -y -i ${TSFILE} -map 0:v -map 0:a -c:v ${VCODEC} -c:a ${ACODEC} -sn ${MKVDIR}/${MKVFILE}" | tee -a $LOGFILE ;
-  $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
+  # $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
   if [[ $? -eq 0 ]] ; then
    mkdir -p "$ARCHIVED" ;
    echo "$(date) ${MV} ${TSDIR}/${METADATA}*.{eit,ap,cuts,meta,sc,ts} ${ARCHIVED}/" | tee -a $LOGFILE ;
@@ -68,7 +68,7 @@ else
  echo "$(date) else ..." | tee -a $LOGFILE ;
 fi
 
-echo "find -L . -type l -exec rm {}" | tee -a $LOGFILE ;
-find -L . -type l -exec rm {} ;
+echo "find -L . -type l -exec rm {};" | tee -a $LOGFILE ;
+find -L . -type l -exec rm {} \;
 
 cd -
