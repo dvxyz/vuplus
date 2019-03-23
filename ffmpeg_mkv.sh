@@ -6,45 +6,60 @@ VCODEC=copy
 OFFSET=00:05:00
 MV="mv"
 RM="rm"
-RECDIR=$1
-DUPE=$RECDIR/_dupe_
-RECFILE="${RECDIR}/${2}"
+RECDIR="${1:-/mnt/usb}"
+RECFILE="$RECDIR/${2}"
+ARCHIVED="$RECDIR/ts"
+DUPE="$RECDIR/_dupe_"
+SCRAMBLE="$RECDIR/scrambled"
 MKVDIR=/mnt/passport/vuuno4k
 LOGFILE=/tmp/ffmpeg_mkv.log
 
-function test() {
-	TSFILE="$1";
-	echo "Files: $TSFILE";
-}
+ # if [[ -f "$MKVDIR/$MKVFILE" ]] ; then
+ # mkdir -p $DUPE ;
+ # echo "$(date) [dupe] ${MV} ${TSDIR}/${METADATA}*.{eit,ap,cuts,meta,sc,ts} ${DUPE}" | tee -a $LOGFILE;
+ # $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$DUPE/" ;
+ # else
+  # echo "$(date) [ffmp] ${FFMPEG} -ss ${OFFSET} -y -i ${TSFILE} -map 0:v -map 0:a -c:v ${VCODEC} -c:a ${ACODEC} -sn ${MKVDIR}/${MKVFILE}" | tee -a $LOGFILE ;
+  # $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
+  # if [[ $? -eq 0 ]] ; then
+   # mkdir -p "$ARCHIVED" ;
+   # echo "$(date) ${MV} ${TSDIR}/${METADATA}*.{eit,ap,cuts,meta,sc,ts} ${ARCHIVED}/" | tee -a $LOGFILE ;
+   # $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$ARCHIVED/" ;
+   # for f in ts/"$METADATA"*.{eit,ap,cuts,meta,sc,ts} ; do ln -nsf "$f" "${f:19}" ; done
+  # else
+  # echo "$TSFILE : RC $?" ;
+  # mkdir -p "$SCRAMBLE" ;
+  # echo "$(date) [scrm] ${MV} ${TSDIR}/${METADATA}*.{eit,ap,cuts,meta,sc,ts} ${SCRAMBLE}/" | tee -a $LOGFILE
+  # $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$SCRAMBLE/" ;
+  # $RM "$MKVDIR/$MKVFILE" ;
+  # fi ;
+# fi ;
 
 function ffmpeg_mkv() {
  TSFILE="$1"
  TSDIR=$(dirname "$TSFILE")
- ARCHIVED="$TSDIR/ts"
- SCRAMBLE="$TSDIR/scrambled"
  METADATA=$(basename "$TSFILE" .ts)
- MKVFILE=$(basename "$TSFILE" .ts)
- MKVFILE="${MKVFILE:16}".mkv
+ SIMPLE_TS="$METADATA"
+ SIMPLE_TS="${SIMPLE_TS:16}"
+ MKVFILE="${SIMPLE_TS}".mkv
 
- if [[ -f "$MKVDIR/$MKVFILE" ]] ; then
-  mkdir -p $DUPE ;
-  echo "$(date) [dupe] ${MV} ${TSDIR}/${METADATA}*.{eit,ap,cuts,meta,sc,ts} ${DUPE}" | tee -a $LOGFILE;
-  $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$DUPE/" ;
- else
-  echo "$(date) [ffmp] ${FFMPEG} -ss ${OFFSET} -y -i ${TSFILE} -map 0:v -map 0:a -c:v ${VCODEC} -c:a ${ACODEC} -sn ${MKVDIR}/${MKVFILE}" | tee -a $LOGFILE ;
-  # $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
-  if [[ $? -eq 0 ]] ; then
-   mkdir -p "$ARCHIVED" ;
-   echo "$(date) ${MV} ${TSDIR}/${METADATA}*.{eit,ap,cuts,meta,sc,ts} ${ARCHIVED}/" | tee -a $LOGFILE ;
-   $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$ARCHIVED/" ;
-   for f in ts/"$METADATA"*.{eit,ap,cuts,meta,sc,ts} ; do ln -nsf "$f" "${f:19}" ; done
-  else
-   echo "$TSFILE : RC $?" ;
-   mkdir -p "$SCRAMBLE" ;
-   echo "$(date) [scrm] ${MV} ${TSDIR}/${METADATA}*.{eit,ap,cuts,meta,sc,ts} ${SCRAMBLE}/" | tee -a $LOGFILE
-   $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$SCRAMBLE/" ;
-   $RM "$MKVDIR/$MKVFILE" ;
+ if [[ ! -f "${ARCHIVED}/${SIMPLE_TS}.ts" ]] ; then
+  if [[ ! -f "$MKVDIR/$MKVFILE" ]] ; then
+   echo "$(date) [ffmp] ${FFMPEG} -ss ${OFFSET} -y -i ${TSFILE} -map 0:v -map 0:a -c:v ${VCODEC} -c:a ${ACODEC} -sn ${MKVDIR}/${MKVFILE}" | tee -a $LOGFILE ;
+   $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
+   if [[ ! $? -eq 0 ]] ; then 
+    $RM "$MKVDIR/$MKVFILE" ; 
+    echo "ln -nsf $METADATA*.{eit,ap,cuts,meta,sc,ts} ${SCRAMBLE}/" | tee -a $LOGFILE;
+    for f in "$METADATA"*.{eit,ap,cuts,meta,sc,ts} ; do ln -nsf "../${f}" "${SCRAMBLE}/" ; done
+   fi ;
   fi ;
+  echo "$(date) ln -nsf ${METADATA}*.{eit,ap,cuts,meta,sc,ts} ${ARCHIVED}" | tee -a $LOGFILE ;
+  for f in "$METADATA"*.{eit,ap,cuts,meta,sc,ts} ; do ln -nsf "../${f}" "${ARCHIVED}/${f:16}" ; done
+ else
+  # if [[ "$(readlink )" ]] ; then
+   echo "ln -nsf $METADATA*.{eit,ap,cuts,meta,sc,ts} ${DUPE}/" | tee -a $LOGFILE;
+   for f in "$METADATA"*.{eit,ap,cuts,meta,sc,ts} ; do ln -nsf "../${f}" "${DUPE}/" ; done
+  # fi ;
  fi ;
 }
 
@@ -68,7 +83,7 @@ else
  echo "$(date) else ..." | tee -a $LOGFILE ;
 fi
 
-echo "find -L . -type l -exec rm {};" | tee -a $LOGFILE ;
-find -L . -type l -exec rm {} \;
+echo "find -L $ARCHIVED $DUPE -type l -exec rm {};" | tee -a $LOGFILE ;
+find -L "$ARCHIVED" "$DUPE" -type l -exec rm {} \;
 
 cd -
