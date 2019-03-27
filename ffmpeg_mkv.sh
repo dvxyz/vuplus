@@ -6,34 +6,10 @@ VCODEC=copy
 OFFSET=00:05:00
 MV="mv"
 RM="rm"
-RECDIR="${1:-/mnt/usb}"
-RECFILE="$RECDIR/${2}"
-ARCHIVED="$RECDIR/ts"
-DUPE="$RECDIR/_dupe_"
-SCRAMBLE="$RECDIR/scrambled"
+RECDIR=${1:-/mnt/usb}
+RECFILE=${2:-""}
 MKVDIR=/mnt/passport/vuuno4k
 LOGFILE=/tmp/ffmpeg_mkv.log
-
- # if [[ -f "$MKVDIR/$MKVFILE" ]] ; then
- # mkdir -p $DUPE ;
- # echo "$(date) [dupe] ${MV} ${TSDIR}/${METADATA}*.{eit,ap,cuts,meta,sc,ts} ${DUPE}" | tee -a $LOGFILE;
- # $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$DUPE/" ;
- # else
-  # echo "$(date) [ffmp] ${FFMPEG} -ss ${OFFSET} -y -i ${TSFILE} -map 0:v -map 0:a -c:v ${VCODEC} -c:a ${ACODEC} -sn ${MKVDIR}/${MKVFILE}" | tee -a $LOGFILE ;
-  # $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
-  # if [[ $? -eq 0 ]] ; then
-   # mkdir -p "$ARCHIVED" ;
-   # echo "$(date) ${MV} ${TSDIR}/${METADATA}*.{eit,ap,cuts,meta,sc,ts} ${ARCHIVED}/" | tee -a $LOGFILE ;
-   # $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$ARCHIVED/" ;
-   # for f in ts/"$METADATA"*.{eit,ap,cuts,meta,sc,ts} ; do ln -nsf "$f" "${f:19}" ; done
-  # else
-  # echo "$TSFILE : RC $?" ;
-  # mkdir -p "$SCRAMBLE" ;
-  # echo "$(date) [scrm] ${MV} ${TSDIR}/${METADATA}*.{eit,ap,cuts,meta,sc,ts} ${SCRAMBLE}/" | tee -a $LOGFILE
-  # $MV "$TSDIR/$METADATA"*.{eit,ap,cuts,meta,sc,ts} "$SCRAMBLE/" ;
-  # $RM "$MKVDIR/$MKVFILE" ;
-  # fi ;
-# fi ;
 
 function ffmpeg_mkv() {
  TSFILE="$1"
@@ -43,47 +19,78 @@ function ffmpeg_mkv() {
  SIMPLE_TS="${SIMPLE_TS:16}"
  MKVFILE="${SIMPLE_TS}".mkv
 
+ # return;
+
  if [[ ! -f "${ARCHIVED}/${SIMPLE_TS}.ts" ]] ; then
   if [[ ! -f "$MKVDIR/$MKVFILE" ]] ; then
+   echo "$(date) find ${SCRAMBLE} -type l -name ${METADATA}.*' -exec rm {} ;" | tee -a $LOGFILE ;
+   find "$SCRAMBLE" -type l -name "$METADATA"'.*' -exec rm {} \;
    echo "$(date) [ffmp] ${FFMPEG} -ss ${OFFSET} -y -i ${TSFILE} -map 0:v -map 0:a -c:v ${VCODEC} -c:a ${ACODEC} -sn ${MKVDIR}/${MKVFILE}" | tee -a $LOGFILE ;
-   $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
+   $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a:0 -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
    if [[ ! $? -eq 0 ]] ; then 
     $RM "$MKVDIR/$MKVFILE" ; 
-    echo "ln -nsf $METADATA*.{eit,ap,cuts,meta,sc,ts} ${SCRAMBLE}/" | tee -a $LOGFILE;
+    echo "$(date) ln -nsf $METADATA*.{eit,ap,cuts,meta,sc,ts} ${SCRAMBLE}/" | tee -a $LOGFILE ;
     for f in "$METADATA"*.{eit,ap,cuts,meta,sc,ts} ; do ln -nsf "../${f}" "${SCRAMBLE}/" ; done
    fi ;
   fi ;
-  echo "$(date) ln -nsf ${METADATA}*.{eit,ap,cuts,meta,sc,ts} ${ARCHIVED}" | tee -a $LOGFILE ;
+  echo "$(date) ln -nsf ${METADATA}*.{eit,ap,cuts,meta,sc,ts} ${ARCHIVED}/" | tee -a $LOGFILE ;
   for f in "$METADATA"*.{eit,ap,cuts,meta,sc,ts} ; do ln -nsf "../${f}" "${ARCHIVED}/${f:16}" ; done
  else
-  # if [[ "$(readlink )" ]] ; then
-   echo "ln -nsf $METADATA*.{eit,ap,cuts,meta,sc,ts} ${DUPE}/" | tee -a $LOGFILE;
+   READLINK_A=$(readlink -f "${TSFILE}")
+   READLINK_B=$(readlink -f "${ARCHIVED}/${SIMPLE_TS}.ts")
+   echo "$(date) readlink: $READLINK_A => ${TSFILE}" | tee -a $LOGFILE;
+   echo "$(date) readlink: $READLINK_B => ${ARCHIVED}/${SIMPLE_TS}.ts" | tee -a $LOGFILE;
+  if [[ "${READLINK_A}" == "${READLINK_B}" ]] ; then
+   echo "$(date) readlink: Skipping..." ;
+  else
+   echo "$(date) ln -nsf $METADATA*.{eit,ap,cuts,meta,sc,ts} ${DUPE}/" | tee -a $LOGFILE;
    for f in "$METADATA"*.{eit,ap,cuts,meta,sc,ts} ; do ln -nsf "../${f}" "${DUPE}/" ; done
-  # fi ;
+  fi ;
  fi ;
 }
 
-cd $RECDIR
+
+if [[ $# -eq 0 ]] ; then
+ echo "$(date) Usage $0 directory [filename]"
+ exit ;
+fi ;
+
+if [[ "$RECFILE" == "" ]] ; then
+  RECFILE=$RECDIR ;
+else
+  RECFILE=$RECDIR/$RECFILE;
+fi ;
+
+if [[ ! -d "$RECDIR" ]] ; then
+  RECDIR=$(dirname "$RECDIR") ;
+fi ;
+
+ARCHIVED="$RECDIR/ts"
+DUPE="$RECDIR/_dupe_"
+SCRAMBLE="$RECDIR/scrambled"
 
 echo "$(date) $0 $@" | tee -a $LOGFILE
 echo "$(date) RECDIR: [${RECDIR}]" | tee -a $LOGFILE
 echo "$(date) RECFILE: [${RECFILE}]" | tee -a $LOGFILE
 
+pwd
+cd $RECDIR
+
 if [[ -d "$RECFILE" ]] ; then
- for TSFILE in "$RECFILE"*.ts ; do
+ for TSFILE in "$RECFILE/"*.ts ; do
   if [[ -f "$TSFILE" ]] ; then
-   echo "$(date) ffmpeg_mkv ${TSFILE};" | tee -a $LOGFILE ;
+   echo "$(date) ffmpeg_mkv (d) ${TSFILE};" | tee -a $LOGFILE ;
    ffmpeg_mkv "$TSFILE" ;
   fi ;
  done ;
 elif [[ -f "$RECFILE" ]] ; then
- echo "$(date) ffmpeg_mkv ${RECFILE} ;" | tee -a $LOGFILE ;
+ echo "$(date) ffmpeg_mkv (f) ${RECFILE} ;" | tee -a $LOGFILE ;
  ffmpeg_mkv "$RECFILE" ;
 else
  echo "$(date) else ..." | tee -a $LOGFILE ;
 fi
 
-echo "find -L $ARCHIVED $DUPE -type l -exec rm {};" | tee -a $LOGFILE ;
-find -L "$ARCHIVED" "$DUPE" -type l -exec rm {} \;
+echo "$(date) find -L $ARCHIVED $DUPE $SCRAMBLE -type l -exec rm {};" | tee -a $LOGFILE ;
+find -L "$ARCHIVED" "$DUPE" "$SCRAMBLE" -type l -exec rm {} \;
 
 cd -
