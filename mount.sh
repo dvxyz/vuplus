@@ -4,12 +4,14 @@ ACTION="$1"
 DRIVE="$2"
 DEFAULT="Mount/Umount <hts|passport>"
 
-# $ACTION /mnt/$DRIVE
-
 if [[ "$ACTION" == "mount" || "$ACTION" == "umount" ]] ; then
 	case "$DRIVE" in
 		hts)
-			$ACTION /mnt/hts > /dev/null 2>&1 &	;;
+			if mount | egrep /home/hts > /dev/null ; then
+				umount /mnt/hts > /dev/null 2>&1 ;
+			else
+				mount.nfs4 -o port=3049 es.velezschrod.xyz:/home/hts /mnt/hts > /dev/null 2>&1 ;
+			fi ;;
 		passport)
 			$ACTION /mnt/passport > /dev/null 2>&1 & ;;
 		*) 
