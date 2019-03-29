@@ -40,9 +40,12 @@ function update_oscam()
  sed -i "s/\(device *= *\).*/\1$oscam_srvr,$oscam_port/" $oscam_file
  sed -i "s/\(user *= *\).*/\1$oscam_user/" $oscam_file
  sed -i "s/\(password *= *\).*/\1$oscam_pass/" $oscam_file
+ sed -i "s/\(enable *= *\).*/\11/" $oscam_file
 }
 
 echo "[$(date '+%Y-%m-%d %H:%M:%S')] [$(basename $0)] $@" >> /tmp/update_oscam.log
+
+sed -i "s/\(enable *= *\).*/\10/" /etc/tuxbox/config/oscam.*.server
 
 if [[ "$1" == "restart" ]] ; then
  # restart_oscam
@@ -58,7 +61,7 @@ else
  fi
 
  for url in "${urls[@]}" ; do 
-  read -r -a array <<< $(wget $url -O - | egrep -i -m1 "C: " | sed -E 's/<\/h1>//' | sed -E 's/          <h1>C: //' | sed -E 's/         <p class="text-center">Your Free Test line : <strong>c: //' | sed -E 's/<\/strong><\/p>//')
+  read -r -a array <<< $(wget $url -O - | egrep -i -m1 "C: " | sed -E 's/<\/h1>//' | sed -E 's/<h1>C: //' | sed -E 's/         <p class="text-center">Your Free Test line : <strong>c: //' | sed -E 's/<\/strong><\/p>//')
 
   oscam_srvr="${array[0]}"
   oscam_port="${array[1]}"
