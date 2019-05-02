@@ -1,7 +1,7 @@
 #!/bin/bash
 
 GENERALI=194.147.195.250
-UK=91.110.23.227
+UK=91.110.23.190
 
 if [ "$1" = "clear" ] ; then
  iptables -t filter -P OUTPUT ACCEPT
