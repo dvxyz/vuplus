@@ -1,6 +1,7 @@
 #!/bin/bash
 
 GENERALI=194.147.195.250
+DE=95.90.205.224
 UK=91.110.23.243
 
 if [ "$1" = "clear" ] ; then
@@ -23,6 +24,7 @@ iptables -A INPUT -s 192.168.1.0/24 -j ACCEPT
 iptables -A INPUT -s ch.velezschrod.xyz -j ACCEPT
 iptables -A INPUT -s es.velezschrod.xyz -j ACCEPT
 iptables -A INPUT -s $UK -j ACCEPT
+iptables -A INPUT -s $DE -j ACCEPT
 iptables -A INPUT -s $GENERALI -j ACCEPT
 
 # for ip in $(egrep nameserver /etc/resolv.conf | cut -d ' ' -f 2) ; do
