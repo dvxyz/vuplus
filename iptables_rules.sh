@@ -27,8 +27,6 @@ iptables -A INPUT -s $UK -j ACCEPT
 iptables -A INPUT -s $DE -j ACCEPT
 iptables -A INPUT -s $GENERALI -j ACCEPT
 
-iptables -A INPUT -s 87.230.72.84 -j ACCEPT
-
 # for ip in $(egrep nameserver /etc/resolv.conf | cut -d ' ' -f 2) ; do
 # iptables -A INPUT -p udp -s $ip --sport 53 -m state --state ESTABLISHED -j ACCEPT
 # done
