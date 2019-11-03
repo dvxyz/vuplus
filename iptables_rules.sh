@@ -2,7 +2,7 @@
 
 GENERALI=194.147.195.250
 DE=95.90.205.224
-UK=91.110.23.22
+UK=91.110.23.135
 
 if [ "$1" = "clear" ] ; then
  iptables -t filter -P OUTPUT ACCEPT
