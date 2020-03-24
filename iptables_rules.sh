@@ -26,6 +26,7 @@ iptables -A INPUT -s es.velezschrod.xyz -j ACCEPT
 iptables -A INPUT -s $UK -j ACCEPT
 iptables -A INPUT -s $DE -j ACCEPT
 iptables -A INPUT -s $GENERALI -j ACCEPT
+# iptables -A INPUT -m mac --mac-source 1c:b0:44:15:12:fc -j ACCEPT
 
 # for ip in $(egrep nameserver /etc/resolv.conf | cut -d ' ' -f 2) ; do
 # iptables -A INPUT -p udp -s $ip --sport 53 -m state --state ESTABLISHED -j ACCEPT
