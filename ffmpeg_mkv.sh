@@ -21,6 +21,13 @@ function ffmpeg_mkv() {
 
  # return;
 
+ for f in "$METADATA"*.{eit,ap,cuts,meta,sc,ts} ; do 
+  channel=$(echo $f | cut -d'-' -f2 | sort -u | tr -d ' ') ;
+  mkdir -p /media/usb/channels/$channel ;
+  # echo "$f => $channel" ;
+  ln -nsf "$RECDIR/$f" $RECDIR/channels/$channel/ ;
+ done
+
  if [[ ! -f "${ARCHIVED}/${SIMPLE_TS}.ts" ]] ; then
   if [[ ! -f "$MKVDIR/$MKVFILE" ]] ; then
    echo "$(date) find ${SCRAMBLE} -type l -name ${METADATA}.*' -exec rm {} ;" | tee -a $LOGFILE ;
