@@ -33,7 +33,8 @@ function ffmpeg_mkv() {
    echo "$(date) find ${SCRAMBLE} -type l -name ${METADATA}.*' -exec rm {} ;" | tee -a $LOGFILE ;
    find "$SCRAMBLE" -type l -name "$METADATA"'.*' -exec rm {} \;
    echo "$(date) [ffmp] ${FFMPEG} -ss ${OFFSET} -y -i ${TSFILE} -map 0:v -map 0:a -c:v ${VCODEC} -c:a ${ACODEC} -sn ${MKVDIR}/${MKVFILE}" | tee -a $LOGFILE ;
-   $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a:0 -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
+   # $FFMPEG -ss $OFFSET -y -i "$TSFILE" -map 0:v -map 0:a:0 -c:v $VCODEC -c:a $ACODEC -sn "$MKVDIR/$MKVFILE" ;
+   $FFMPEG  -i "$TSFILE"  -map 0:v -map 0:a -c:v copy -c:a copy -sn -f null /dev/null
    if [[ ! $? -eq 0 ]] ; then 
     $RM "$MKVDIR/$MKVFILE" ; 
     echo "$(date) ln -nsf $METADATA*.{eit,ap,cuts,meta,sc,ts} ${SCRAMBLE}/" | tee -a $LOGFILE ;
@@ -72,9 +73,9 @@ if [[ ! -d "$RECDIR" ]] ; then
   RECDIR=$(dirname "$RECDIR") ;
 fi ;
 
-ARCHIVED="$RECDIR/ts"
+ARCHIVED="$RECDIR/_ts_"
 DUPE="$RECDIR/_dupe_"
-SCRAMBLE="$RECDIR/scrambled"
+SCRAMBLE="$RECDIR/_scrambled_"
 
 echo "$(date) $0 $@" | tee -a $LOGFILE
 echo "$(date) RECDIR: [${RECDIR}]" | tee -a $LOGFILE
