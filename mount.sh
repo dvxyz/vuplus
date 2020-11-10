@@ -10,7 +10,7 @@ if [[ "$ACTION" == "mount" || "$ACTION" == "umount" ]] ; then
 			if mount | egrep /home/hts > /dev/null ; then
 				umount /mnt/hts > /dev/null 2>&1 ;
 			else
-				mount.nfs4 -o port=3049 es.velezschrod.xyz:/home/hts /mnt/hts > /dev/null 2>&1 ;
+				mount.nfs4 -o port=3049 es.velezschrod.xyz:/media/hts /mnt/hts > /dev/null 2>&1 ;
 			fi ;;
 		passport)
 			$ACTION /mnt/passport > /dev/null 2>&1 & ;;
