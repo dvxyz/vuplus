@@ -9,6 +9,7 @@ RM="rm"
 RECDIR=${1:-/mnt/usb}
 RECFILE=${2:-""}
 MKVDIR=/mnt/passport/vuuno4k
+MKVDIR=/mnt/usb/_mkv
 LOGFILE=/tmp/ffmpeg_mkv.log
 
 function ffmpeg_mkv() {
