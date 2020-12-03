@@ -19,9 +19,8 @@ iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
 iptables -A INPUT -i lo -j ACCEPT
 iptables -A INPUT -s 127.0.0.1 -j ACCEPT
 iptables -A INPUT -s 10.8.0.0/24 -j ACCEPT
-iptables -A INPUT -s 10.100.100.0/24 -j ACCEPT
-iptables -A INPUT -s 192.168.0.0/24 -j ACCEPT
-iptables -A INPUT -s 192.168.1.0/24 -j ACCEPT
+iptables -A INPUT -s 10.100.0.0/23 -j ACCEPT
+iptables -A INPUT -s 192.168.0.0/23 -j ACCEPT
 iptables -A INPUT -s ch.velezschrod.xyz -j ACCEPT
 iptables -A INPUT -s es.velezschrod.xyz -j ACCEPT
 
